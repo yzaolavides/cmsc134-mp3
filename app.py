@@ -63,6 +63,8 @@ def posts():
                           + request.cookies.get("session_token") + "';")
         user = res.fetchone()
         if user:
+            if "<" in request.form["message"] and ">" in request.form["message"]: # if a tag is found
+                return redirect("/home")
             cur.execute("INSERT INTO posts (message, user) VALUES ('"
                         + request.form["message"] + "', " + str(user[0]) + ");")
             con.commit()
