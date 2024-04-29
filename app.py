@@ -3,9 +3,19 @@ import sqlite3
 
 from flask import Flask, request, render_template, redirect
 
+xss_dict = {"\"":"&quot;",">":"&gt;","<":"&lt;","'":"&apos;"}
 
 app = Flask(__name__)
 con = sqlite3.connect("app.db", check_same_thread=False)
+
+def clean_input(message):
+    catch = ""
+    for i in range(len(message)):
+        if message[i] in xss_dict:
+            catch += xss_dict[message[i]]
+        else:
+            catch += message[i]
+    return catch
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -63,10 +73,8 @@ def posts():
                           + request.cookies.get("session_token") + "';")
         user = res.fetchone()
         if user:
-            if "<" in request.form["message"] and ">" in request.form["message"]: # if a tag is found
-                return redirect("/home")
-            cur.execute("INSERT INTO posts (message, user) VALUES ('"
-                        + request.form["message"] + "', " + str(user[0]) + ");")
+            message = clean_input(request.form["message"])
+            cur.execute("INSERT INTO posts (message, user) VALUES (?,?)",(message, str(user[0])))
             con.commit()
             return redirect("/home")
 
