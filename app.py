@@ -2,11 +2,14 @@ import secrets
 import sqlite3
 
 from flask import Flask, request, render_template, redirect
+from flask_wtf.csrf import CSRFProtect
 
 xss_dict = {"\"":"&quot;",">":"&gt;","<":"&lt;","'":"&apos;"}
 
 app = Flask(__name__)
 con = sqlite3.connect("app.db", check_same_thread=False)
+app.config["SECRET_KEY"] = secrets.token_hex()
+csrf = CSRFProtect(app)
 
 def clean_input(message):
     catch = ""
